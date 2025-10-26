@@ -1,0 +1,13 @@
+node_modules/
+.git/
+.gitignore
+README.md
+webpack.config.js
+yarn.lock
+package-lock.json
+*.log
+.DS_Store
+.vscode/
+dist/
+src/
+!dist/**
