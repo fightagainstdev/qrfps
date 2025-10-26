@@ -1,0 +1,7 @@
+build:
+  script: echo "Static site, no build needed"
+  output: docs/
+
+deploy:
+  type: static
+  output: docs/
