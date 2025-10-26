@@ -1,0 +1,10 @@
+pages:
+  stage: deploy
+  script:
+    - echo "Deploying to GitLab Pages"
+  artifacts:
+    paths:
+      - docs/
+    expire_in: 1 week
+  only:
+    - master
