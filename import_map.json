@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "three": "https://esm.sh/three@0.154.0",
+    "three/examples/jsm/libs/stats.module": "https://esm.sh/three@0.154.0/examples/jsm/libs/stats.module.js",
+    "three/examples/jsm/loaders/FBXLoader": "https://esm.sh/three@0.154.0/examples/jsm/loaders/FBXLoader.js",
+    "three/examples/jsm/loaders/GLTFLoader": "https://esm.sh/three@0.154.0/examples/jsm/loaders/GLTFLoader.js",
+    "three/examples/jsm/loaders/OBJLoader": "https://esm.sh/three@0.154.0/examples/jsm/loaders/OBJLoader.js",
+    "three/examples/jsm/utils/SkeletonUtils": "https://esm.sh/three@0.154.0/examples/jsm/utils/SkeletonUtils.js",
+    "three-pathfinding": "https://esm.sh/three-pathfinding@1.5.0",
+    "ammo.js": "https://esm.sh/ammo.js@0.0.1"
+  }
+}
