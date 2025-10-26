@@ -6,8 +6,5 @@
   "importMap": "./import_map.json",
   "tasks": {
     "dev": "deno run --allow-net --allow-read --allow-env server.js"
-  },
-  "deploy": {
-    "entrypoint": "server.js"
   }
 }
