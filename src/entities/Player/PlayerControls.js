@@ -56,7 +56,10 @@ export default class PlayerControls extends Component{
         Input.AddKeyDownListner((event) => {
             if(event.code === 'KeyB'){
                 const playerHealth = this.parent.GetComponent('PlayerHealth');
-                if(playerHealth) playerHealth.Heal();
+                if(playerHealth){
+                    const healed = playerHealth.Heal();
+                    console.log('PlayerControls: B key pressed, heal result:', healed);
+                }
             }
         });
     }

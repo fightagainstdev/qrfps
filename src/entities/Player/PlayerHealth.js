@@ -92,9 +92,15 @@ export default class PlayerHealth extends Component{
 
     UpdateHealButton(){
         const button = document.getElementById('heal_button');
-        console.log('UpdateHealButton, healCharges:', this.healCharges, 'button:', button);
+        console.log('UpdateHealButton, healCharges:', this.healCharges, 'health:', this.health, 'button:', button);
         if(button){
-            button.disabled = this.healCharges <= 0;
+            const canHeal = this.healCharges > 0 && this.health < this.maxHealth;
+            button.disabled = !canHeal;
+            if(canHeal){
+                button.style.backgroundColor = 'rgba(0, 100, 0, 0.8)'; // 绿色
+            }else{
+                button.style.backgroundColor = 'rgba(100, 0, 0, 0.8)'; // 红色
+            }
         }
     }
 

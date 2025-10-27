@@ -72,8 +72,11 @@ export default class AmmoBox extends Component{
             if(Math.random() < 0.5){
                 // 回血10%
                 const playerHealth = this.player.GetComponent('PlayerHealth');
-                if(playerHealth) playerHealth.Heal(); // 直接回血
-                console.log('AmmoBox: 直接回血10%');
+                if(playerHealth && playerHealth.Heal()){
+                    console.log('AmmoBox: 直接回血10%');
+                }else{
+                    console.log('AmmoBox: 无法回血，可能是因为血量已满或没有回血次数');
+                }
             }else{
                 // 加30发子弹
                 this.player.Broadcast({topic: 'AmmoPickup'});
