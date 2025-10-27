@@ -117,15 +117,48 @@ export default class CharacterController extends Component{
     NavigateToRandomPoint(){
         let node;
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = 20;
 
-        // Try to find a random point that's not too close to ammo boxes
+        // Try to find a random point that's within bounds and not blocked
         do {
             node = this.navmesh.GetRandomNode(this.model.position, 50);
             attempts++;
-        } while (this.IsPointNearAmmoBox(node) && attempts < maxAttempts);
+        } while ((!this.IsPointInBounds(node) || this.IsPointNearObstacle(node)) && attempts < maxAttempts);
+
+        if(attempts >= maxAttempts){
+            // If we can't find a valid point, stay in place
+            this.path = [];
+            return;
+        }
 
         this.path = this.navmesh.FindPath(this.model.position, node);
+    }
+
+    IsPointInBounds(point){
+        if(!point) return false;
+
+        // Define map boundaries (adjust these values based on your level)
+        const minX = -20, maxX = 40;
+        const minZ = -20, maxZ = 50;
+
+        return point.x >= minX && point.x <= maxX && point.z >= minZ && point.z <= maxZ;
+    }
+
+    IsPointNearObstacle(point){
+        if(!point) return true;
+
+        // Check distance from large static boxes/obstacles
+        // This is a simplified check - in a real game you'd check against actual collision geometry
+        const obstacleAreas = [
+            // Define areas around large boxes that should be avoided
+            {center: new THREE.Vector3(0, 0, 0), radius: 5}, // Example obstacle area
+            {center: new THREE.Vector3(10, 0, 10), radius: 4}, // Add more as needed
+            {center: new THREE.Vector3(-5, 0, 15), radius: 3},
+        ];
+
+        return obstacleAreas.some(obstacle => {
+            return point.distanceTo(obstacle.center) < obstacle.radius;
+        });
     }
 
     IsPointNearAmmoBox(point){
@@ -145,39 +178,41 @@ export default class CharacterController extends Component{
         this.tempVec.copy(this.player.Position);
         this.tempVec.y = 0.5;
 
-        // Check if player is near any ammo box and avoid those areas
-        const ammoBoxes = this.FindEntity('EntityManager').entities.filter(entity =>
-            entity.Name && entity.Name.startsWith('AmmoBox')
-        );
-
         let targetPos = this.tempVec.clone();
         let foundValidPath = false;
 
         // Try direct path first
         this.path = this.navmesh.FindPath(this.model.position, targetPos);
-        if(this.path && this.path.length > 0){
+        if(this.path && this.path.length > 0 && this.IsPathValid(this.path)){
             foundValidPath = true;
         }
 
-        // If direct path fails or player is too close to box, find alternative
-        if(!foundValidPath || this.IsPlayerNearAmmoBox()){
-            // Find a position near player but away from boxes
+        // If direct path fails, find alternative positions
+        if(!foundValidPath){
+            // Find a position near player but within bounds
             const alternatives = [];
-            for(let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4){
-                const offset = new THREE.Vector3(Math.cos(angle) * 3, 0, Math.sin(angle) * 3);
+            for(let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6){ // More angles for better coverage
+                const offset = new THREE.Vector3(Math.cos(angle) * 4, 0, Math.sin(angle) * 4);
                 const altPos = this.tempVec.clone().add(offset);
-                alternatives.push(altPos);
+                if(this.IsPointInBounds(altPos)){
+                    alternatives.push(altPos);
+                }
             }
 
             // Try alternative positions
             for(const altPos of alternatives){
                 this.path = this.navmesh.FindPath(this.model.position, altPos);
-                if(this.path && this.path.length > 0){
+                if(this.path && this.path.length > 0 && this.IsPathValid(this.path)){
                     targetPos = altPos;
                     foundValidPath = true;
                     break;
                 }
             }
+        }
+
+        // If still no valid path, clear path to stop movement
+        if(!foundValidPath){
+            this.path = [];
         }
 
         /*
@@ -188,6 +223,13 @@ export default class CharacterController extends Component{
             }
         }
         */
+    }
+
+    IsPathValid(path){
+        if(!path || path.length === 0) return false;
+
+        // Check if all points in the path are within bounds
+        return path.every(point => this.IsPointInBounds(point));
     }
 
     IsPlayerNearAmmoBox(){
