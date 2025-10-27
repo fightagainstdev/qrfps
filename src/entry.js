@@ -413,6 +413,7 @@ class FPSGameApp{
     let spawnPosition;
     let attempts = 0;
 
+    let inObstacle = false;
     do {
       // Pick a random spawn area
       const area = spawnAreas[Math.floor(Math.random() * spawnAreas.length)];
@@ -425,7 +426,7 @@ class FPSGameApp{
         {center: new THREE.Vector3(14.37, 0, 10.45), radius: 3.5},
         {center: new THREE.Vector3(32.77, 0, 33.84), radius: 3.5},
       ];
-      const inObstacle = obstacleAreas.some(ob => spawnPosition.distanceTo(ob.center) < ob.radius);
+      inObstacle = obstacleAreas.some(ob => spawnPosition.distanceTo(ob.center) < ob.radius);
     } while ((
       this.entityManager.entities.some(entity => {
         return entity.Name && entity.Name.startsWith('Mutant') && entity.Position && entity.Position.distanceTo(spawnPosition) < minDistance;
