@@ -22,6 +22,7 @@ export default class CharacterController extends Component{
         this.path = [];
         this.tempRot = new THREE.Quaternion();
 
+        this.aggroRadius = 12.0; // 感知半径，单位米
         this.viewAngle = Math.cos(Math.PI / 4.0);
         this.maxViewDistance = 20.0 * 20.0;
         this.tempVec = new THREE.Vector3();
@@ -84,33 +85,32 @@ export default class CharacterController extends Component{
     }
 
     CanSeeThePlayer(){
+        // 玩家在怪物感知圆内就追击
         const playerPos = this.player.Position.clone();
         const modelPos = this.model.position.clone();
         modelPos.y += 1.35;
         const charToPlayer = playerPos.sub(modelPos);
-
-        if(playerPos.lengthSq() > this.maxViewDistance){
-            return;
+        if(charToPlayer.lengthSq() <= this.aggroRadius * this.aggroRadius){
+            return true;
         }
-
+        // 保留原视野锥逻辑作为补充
+        if(charToPlayer.lengthSq() > this.maxViewDistance){
+            return false;
+        }
         charToPlayer.normalize();
         const angle = charToPlayer.dot(this.dir);
-
         if(angle < this.viewAngle){
             return false;
         }
-
+        // 射线检测
         const rayInfo = {};
         const collisionMask = CollisionFilterGroups.AllFilter & ~CollisionFilterGroups.SensorTrigger;
-        
         if(AmmoHelper.CastRay(this.physicsWorld, modelPos, this.player.Position, rayInfo, collisionMask)){
             const body = Ammo.castObject( rayInfo.collisionObject, Ammo.btRigidBody );
-
             if(body == this.player.GetComponent('PlayerPhysics').body){
                 return true;
             }
         }
-
         return false;
     }
 
@@ -147,13 +147,11 @@ export default class CharacterController extends Component{
     IsPointNearObstacle(point){
         if(!point) return true;
 
-        // Check distance from large static boxes/obstacles
-        // This is a simplified check - in a real game you'd check against actual collision geometry
+        // 这里定义大箱子/障碍物区域，需与实际地图一致
         const obstacleAreas = [
-            // Define areas around large boxes that should be avoided
-            {center: new THREE.Vector3(0, 0, 0), radius: 5}, // Example obstacle area
-            {center: new THREE.Vector3(10, 0, 10), radius: 4}, // Add more as needed
-            {center: new THREE.Vector3(-5, 0, 15), radius: 3},
+            {center: new THREE.Vector3(14.37, 0, 10.45), radius: 3.5}, // 大箱子1
+            {center: new THREE.Vector3(32.77, 0, 33.84), radius: 3.5}, // 大箱子2
+            // 可继续添加其它障碍物
         ];
 
         return obstacleAreas.some(obstacle => {

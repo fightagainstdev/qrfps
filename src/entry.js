@@ -420,11 +420,21 @@ class FPSGameApp{
       const randomZ = Math.random() * (area.maxZ - area.minZ) + area.minZ;
       spawnPosition = new THREE.Vector3(randomX, 0.0, randomZ);
       attempts++;
-    } while ((this.entityManager.entities.some(entity => {
-      return entity.Name && entity.Name.startsWith('Mutant') && entity.Position && entity.Position.distanceTo(spawnPosition) < minDistance;
-    }) || this.entityManager.entities.some(entity => {
-      return entity.Name && entity.Name.startsWith('AmmoBox') && entity.Position && entity.Position.distanceTo(spawnPosition) < 2.0;
-    })) && attempts < 30);
+      // 判断是否在大箱子障碍物范围内
+      const obstacleAreas = [
+        {center: new THREE.Vector3(14.37, 0, 10.45), radius: 3.5},
+        {center: new THREE.Vector3(32.77, 0, 33.84), radius: 3.5},
+      ];
+      const inObstacle = obstacleAreas.some(ob => spawnPosition.distanceTo(ob.center) < ob.radius);
+    } while ((
+      this.entityManager.entities.some(entity => {
+        return entity.Name && entity.Name.startsWith('Mutant') && entity.Position && entity.Position.distanceTo(spawnPosition) < minDistance;
+      }) ||
+      this.entityManager.entities.some(entity => {
+        return entity.Name && entity.Name.startsWith('AmmoBox') && entity.Position && entity.Position.distanceTo(spawnPosition) < 2.0;
+      }) ||
+      inObstacle
+    ) && attempts < 30);
 
     if(attempts >= 30){
       console.log('Could not find valid spawn position, skipping spawn');
