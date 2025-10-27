@@ -341,8 +341,13 @@ class FPSGameApp{
     Input.AddKeyDownListner((event) => {
       if(event.code === 'KeyB'){
         event.preventDefault();
-        const playerHealth = this.entityManager.Get("Player").GetComponent("PlayerHealth");
-        playerHealth.Heal();
+        const playerEntity = this.entityManager.Get("Player");
+        if(playerEntity){
+          const playerHealth = playerEntity.GetComponent("PlayerHealth");
+          if(playerHealth){
+            playerHealth.Heal();
+          }
+        }
       }
     });
   }

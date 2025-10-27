@@ -115,14 +115,70 @@ export default class CharacterController extends Component{
     }
 
     NavigateToRandomPoint(){
-        const node = this.navmesh.GetRandomNode(this.model.position, 50);
+        let node;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        // Try to find a random point that's not too close to ammo boxes
+        do {
+            node = this.navmesh.GetRandomNode(this.model.position, 50);
+            attempts++;
+        } while (this.IsPointNearAmmoBox(node) && attempts < maxAttempts);
+
         this.path = this.navmesh.FindPath(this.model.position, node);
+    }
+
+    IsPointNearAmmoBox(point){
+        const ammoBoxes = this.FindEntity('EntityManager').entities.filter(entity =>
+            entity.Name && entity.Name.startsWith('AmmoBox')
+        );
+
+        return ammoBoxes.some(box => {
+            if(box.Position && point){
+                return box.Position.distanceTo(point) < 3.0; // Keep 3 units away from boxes
+            }
+            return false;
+        });
     }
 
     NavigateToPlayer(){
         this.tempVec.copy(this.player.Position);
         this.tempVec.y = 0.5;
-        this.path = this.navmesh.FindPath(this.model.position, this.tempVec);
+
+        // Check if player is near any ammo box and avoid those areas
+        const ammoBoxes = this.FindEntity('EntityManager').entities.filter(entity =>
+            entity.Name && entity.Name.startsWith('AmmoBox')
+        );
+
+        let targetPos = this.tempVec.clone();
+        let foundValidPath = false;
+
+        // Try direct path first
+        this.path = this.navmesh.FindPath(this.model.position, targetPos);
+        if(this.path && this.path.length > 0){
+            foundValidPath = true;
+        }
+
+        // If direct path fails or player is too close to box, find alternative
+        if(!foundValidPath || this.IsPlayerNearAmmoBox()){
+            // Find a position near player but away from boxes
+            const alternatives = [];
+            for(let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4){
+                const offset = new THREE.Vector3(Math.cos(angle) * 3, 0, Math.sin(angle) * 3);
+                const altPos = this.tempVec.clone().add(offset);
+                alternatives.push(altPos);
+            }
+
+            // Try alternative positions
+            for(const altPos of alternatives){
+                this.path = this.navmesh.FindPath(this.model.position, altPos);
+                if(this.path && this.path.length > 0){
+                    targetPos = altPos;
+                    foundValidPath = true;
+                    break;
+                }
+            }
+        }
 
         /*
         if(this.path){
@@ -132,6 +188,19 @@ export default class CharacterController extends Component{
             }
         }
         */
+    }
+
+    IsPlayerNearAmmoBox(){
+        const ammoBoxes = this.FindEntity('EntityManager').entities.filter(entity =>
+            entity.Name && entity.Name.startsWith('AmmoBox')
+        );
+
+        return ammoBoxes.some(box => {
+            if(box.Position){
+                return box.Position.distanceTo(this.player.Position) < 2.0;
+            }
+            return false;
+        });
     }
 
     FacePlayer(t, rate = 3.0){
