@@ -412,8 +412,8 @@ class FPSGameApp{
     const minDistance = 3.0; // 最小间距
     let spawnPosition;
     let attempts = 0;
-
     let inObstacle = false;
+    const maxAttempts = 500; // 增加尝试次数
     do {
       // Pick a random spawn area
       const area = spawnAreas[Math.floor(Math.random() * spawnAreas.length)];
@@ -427,6 +427,7 @@ class FPSGameApp{
         {center: new THREE.Vector3(32.77, 0, 33.84), radius: 3.5},
       ];
       inObstacle = obstacleAreas.some(ob => spawnPosition.distanceTo(ob.center) < ob.radius);
+      if (inObstacle) console.log('Spawn attempt', attempts, 'failed: in obstacle', spawnPosition);
     } while ((
       this.entityManager.entities.some(entity => {
         return entity.Name && entity.Name.startsWith('Mutant') && entity.Position && entity.Position.distanceTo(spawnPosition) < minDistance;
@@ -435,13 +436,11 @@ class FPSGameApp{
         return entity.Name && entity.Name.startsWith('AmmoBox') && entity.Position && entity.Position.distanceTo(spawnPosition) < 2.0;
       }) ||
       inObstacle
-    ) && attempts < 30);
-
-    if(attempts >= 30){
-      console.log('Could not find valid spawn position, skipping spawn');
+    ) && attempts < maxAttempts);
+    if(attempts >= maxAttempts){
+      console.log('Could not find valid spawn position after', maxAttempts, 'attempts, skipping spawn');
       return;
     }
-
     console.log('Spawning enemy at floor position:', spawnPosition);
 
     const npcEntity = new Entity();
