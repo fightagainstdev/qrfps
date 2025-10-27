@@ -198,6 +198,7 @@ class AttackState extends State{
 class DeadState extends State{
     constructor(parent){
         super(parent);
+        this.deathTimer = -1.0;
     }
 
     get Name(){return 'dead'}
@@ -215,14 +216,23 @@ class DeadState extends State{
         }
 
         action.play();
+        this.deathTimer = -1.0;
     }
 
     Update(t){
         // Check if death animation is finished
         const action = this.Animation.action;
         if(action && !action.isRunning()){
-            // Remove the enemy entity after death animation
-            this.parent.proxy.parent.RemoveFromParent();
+            if(this.deathTimer < 0.0){
+                this.deathTimer = 5.0;
+            }else{
+                this.deathTimer -= t;
+                if(this.deathTimer <= 0.0){
+                    // Remove the enemy entity after 5 seconds
+                    this.parent.proxy.RemoveFromScene(); // 移除Three.js模型
+                    this.parent.proxy.parent.RemoveFromParent(); // 移除实体
+                }
+            }
         }
     }
 }

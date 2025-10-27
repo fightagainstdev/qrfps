@@ -226,6 +226,12 @@ export default class CharacterController extends Component{
             this.rootBone.position.z = this.rootBone.refPos.z;
             this.rootBone.position.x = this.rootBone.refPos.x;
         }
+   }
+
+    RemoveFromScene() {
+        if (this.model && this.scene) {
+            this.scene.remove(this.model);
+        }
     }
 
     Update(t){

@@ -11,8 +11,9 @@ export default class UIManager extends Component{
         document.getElementById("max_ammo").innerText = rest;
     }
 
-    SetHealth(health){
-        document.getElementById("health_progress").style.width = `${health}%`;
+    SetHealth(health, maxHealth = 100){
+        const percent = Math.max(0, Math.min(100, (health / maxHealth) * 100));
+        document.getElementById("health_progress").style.width = `${percent}%`;
     }
 
     SetScore(score){

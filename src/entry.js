@@ -77,6 +77,8 @@ class FPSGameApp{
     this.spawnInterval = 15; // 20 seconds
     this.npcCount = 0;
     this.eventHandlersRegistered = false;
+    this.boxSpawnTimer = 0;
+    this.boxSpawnInterval = 30; // 30秒生成一个箱子
 
     AmmoHelper.Init(()=>{this.Init();});
   }
@@ -533,13 +535,56 @@ class FPSGameApp{
       }
     }
 
-    this.entityManager.Update(elapsedTime);
+    // 新增：每30秒生成一个箱子
+    if(this.boxSpawnTimer >= 0){
+      this.boxSpawnTimer += elapsedTime;
+      if(this.boxSpawnTimer >= this.boxSpawnInterval){
+        this.SpawnRandomAmmoBox();
+        this.boxSpawnTimer = 0;
+      }
+    }
 
+    this.entityManager.Update(elapsedTime);
     // Update enemy count display
     this.UpdateEnemyCount();
-
     this.renderer.render(this.scene, this.camera);
     this.stats.update();
+  }
+
+  // 随机生成一个箱子，避免与现有箱子/怪物重叠
+  SpawnRandomAmmoBox(){
+    const spawnAreas = [
+      {minX: -15, maxX: 10, minZ: 8, maxZ: 15},
+      {minX: 15, maxX: 30, minZ: 8, maxZ: 20},
+      {minX: -10, maxX: 5, minZ: 20, maxZ: 35},
+      {minX: 20, maxX: 35, minZ: 25, maxZ: 40}
+    ];
+    let spawnPosition;
+    let attempts = 0;
+    do {
+      const area = spawnAreas[Math.floor(Math.random() * spawnAreas.length)];
+      const randomX = Math.random() * (area.maxX - area.minX) + area.minX;
+      const randomZ = Math.random() * (area.maxZ - area.minZ) + area.minZ;
+      spawnPosition = new THREE.Vector3(randomX, 0.0, randomZ);
+      attempts++;
+    } while ((this.entityManager.entities.some(entity => {
+      return entity.Name && entity.Name.startsWith('Mutant') && entity.Position && entity.Position.distanceTo(spawnPosition) < 2.0;
+    }) || this.entityManager.entities.some(entity => {
+      return entity.Name && entity.Name.startsWith('AmmoBox') && entity.Position && entity.Position.distanceTo(spawnPosition) < 2.0;
+    })) && attempts < 30);
+    if(attempts >= 30){
+      console.log('Could not find valid box spawn position, skipping spawn');
+      return;
+    }
+    const box = new Entity();
+    box.SetName(`AmmoBox${Date.now()}`);
+    box.AddComponent(new AmmoBox(this.scene, this.assets['ammobox'].clone(), this.assets['ammoboxShape'], this.physicsWorld));
+    box.SetPosition(spawnPosition);
+    this.entityManager.Add(box);
+    for(const key in box.components){
+      box.components[key].Initialize();
+    }
+    console.log('Random AmmoBox spawned at', spawnPosition);
   }
 
 }

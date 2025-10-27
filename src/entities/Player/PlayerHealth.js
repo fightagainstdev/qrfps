@@ -13,7 +13,7 @@ export default class PlayerHealth extends Component{
     TakeHit = e =>{
         console.log('Player taking hit, current health:', this.health, 'damage: 10');
         this.health = Math.max(0, this.health - 10);
-        this.uimanager.SetHealth(this.health);
+        this.uimanager.SetHealth(this.health, this.maxHealth);
 
         if(this.health <= 0 && !this._gameOverFired){
             console.log('Player health reached 0, triggering game over directly');
@@ -75,7 +75,7 @@ export default class PlayerHealth extends Component{
             const healAmount = this.maxHealth * 0.1; // 10% of max health
             this.health = Math.min(this.maxHealth, this.health + healAmount);
             this.healCharges--;
-            this.uimanager.SetHealth(this.health);
+            this.uimanager.SetHealth(this.health, this.maxHealth);
             this.UpdateHealButton();
             console.log('Healed! new health:', this.health, 'remaining healCharges:', this.healCharges);
             return true;
@@ -101,7 +101,7 @@ export default class PlayerHealth extends Component{
     Initialize(){
         this.uimanager = this.FindEntity("UIManager").GetComponent("UIManager");
         this.parent.RegisterEventHandler(this.TakeHit, "hit");
-        this.uimanager.SetHealth(this.health);
+        this.uimanager.SetHealth(this.health, this.maxHealth);
         this.UpdateHealButton();
     }
 }
